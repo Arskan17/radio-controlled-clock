@@ -1,52 +1,39 @@
 # KUPONG Wi-Fi Clock
 
-Turns an IKEA **KUPONG** wall clock into a self-setting clock. An **ESP32-C3** replaces the quartz chip, drives the clock's stepper motor directly, and keeps the hands in sync with internet time (NTP) over Wi-Fi. Summer and winter time are handled automatically (Europe/Berlin).
+Makes an IKEA **KUPONG**, a €1 digital LCD alarm clock, set itself. An **ESP32-C3** gets the exact time over Wi-Fi (NTP) and **presses the clock's SET and + buttons through two optocouplers**, the way a person would. The original display, alarm and case stay as they are. Summer and winter time are handled automatically (Europe/Berlin).
 
 Why not a "real" radio clock? The ESP32 has Wi-Fi and Bluetooth radios but no 77.5 kHz DCF77 receiver. NTP over Wi-Fi needs no extra parts.
 
-> **Status:** prototype. The firmware is written but has **not been compiled or tested on hardware yet**.
+> [!IMPORTANT]
+> **Status: hardware design documented, firmware not yet adapted.**
+> `src/main.cpp` is an early prototype written for an *analog* clock movement (stepper-motor pulses), based on the wrong assumption that the KUPONG is a wall clock. It has never been compiled or tested, and it will be rewritten for button injection. See the hardware doc for the design it will follow.
 
-## How it works
+## Hardware documentation
 
-- A quartz clock movement is a *Lavet stepper motor*: one coil, and each pulse of **alternating polarity** advances the second hand one tick.
-- The ESP32 pulses the coil from two GPIOs, once per second when in sync.
-- It tracks where the hands are (`handPos` = seconds past 12:00:00 on the 12 h dial) and compares that with NTP time:
-  - **Hands behind:** steps fast (default 80 ms/step) until caught up.
-  - **Hands ahead** (e.g. autumn DST change): pauses until real time catches up.
-  - It picks whichever option finishes sooner.
-- The hand position survives a reboot (RTC memory) and a power loss (flash, saved every 30 s, so after a power cut it can be up to 30 s off; fix with `set`).
-- NTP re-syncs hourly.
+**→ [docs/kupong-hardware.md](docs/kupong-hardware.md)** covers what's inside the KUPONG, where to tap, wiring, an animated explanation of how a press is injected, the sync procedure, and a checklist for verifying it on your board.
+
+[![How one button press is injected](docs/img/kupong-press-animation.svg)](docs/kupong-hardware.md#how-a-press-is-injected)
+
+## How it works (short)
+
+1. The KUPONG keeps time with its own 32.768 kHz crystal and drifts a few seconds per week.
+2. Once a day the ESP32 enters the clock's time-setting menu and steps the hours and minutes with simulated **+** presses. It confirms with the final **SET** exactly on a minute boundary.
+3. Optionally the ESP also powers the clock from a 1.5 V regulator, so it can power-cycle it to a known starting display.
 
 ## Parts
 
 | Part | Notes |
 |---|---|
-| ESP32-C3 SuperMini | ~€2 on AliExpress; buy a spare |
-| IKEA KUPONG | buy a second one as a sacrificial test unit |
-| Resistor(s) 220–470 Ω | to limit coil current, see below |
-| 2× 1N4148 (optional) | flyback protection |
-| Wire, USB-C cable, multimeter | |
+| IKEA KUPONG | buy a second one as a sacrificial test unit (€1) |
+| ESP32-C3 SuperMini | ~€2 on AliExpress, USB-C powered |
+| 2× PC817 optocoupler | one per button, isolates the 3.3 V ESP from the 1.5 V clock |
+| 2× 1 kΩ resistor | opto LED current, ~2 mA |
+| 1.5 V LDO (optional) | e.g. XC6206P152, replaces the AAA so the ESP can reset the clock |
+| 30 AWG wire, hot glue, multimeter | thin wire and strain relief for the tiny pads |
 
-## Hardware
+## Firmware (to be rewritten)
 
-1. Open the KUPONG movement. Find the coil (fine copper winding) and its two pads on the PCB.
-2. Measure the coil resistance (expect roughly 150–300 Ω).
-3. Cut the PCB traces between the quartz IC and the coil. Solder two wires to the coil pads.
-4. Wire it up:
-
-```
-ESP32-C3                              KUPONG coil
-GPIO 3 ──[ R ]──────────────┐
-                           ( coil )
-GPIO 4 ─────────────────────┘
-GND, USB-C 5 V: power from USB
-```
-
-Pick **R ≈ 1.2 × coil resistance**, so the coil sees about the same current as with the original 1.5 V battery (3.3 V across R + coil). Avoid GPIO 2, 8 and 9 (strapping pins).
-
-## Firmware
-
-PlatformIO, Arduino framework.
+PlatformIO, Arduino framework, ESP32-C3.
 
 ```bash
 cp include/secrets.example.h include/secrets.h   # then fill in Wi-Fi SSID/password
@@ -54,32 +41,15 @@ pio run -t upload
 pio device monitor
 ```
 
+The Wi-Fi, NTP, timezone, settings-storage and serial-command plumbing in `src/main.cpp` will be reused. The motor driver is replaced by:
+- `press(button, ms)`: pulse an optocoupler GPIO.
+- A set-time routine following the [sync procedure](docs/kupong-hardware.md#sync-procedure).
+
 On Linux your user needs to be in the `dialout` group to access `/dev/ttyACM0`.
-
-### Serial commands
-
-| Command | Effect |
-|---|---|
-| `set HH:MM:SS` | Tell the clock where the hands point right now (12 h dial) |
-| `status` | Time, hand position, state, Wi-Fi, last NTP sync |
-| `hold` / `run` | Stop / resume automatic stepping |
-| `pulse N` | Step N times now (motor tests, best in `hold`) |
-| `flip` | Invert the next pulse polarity (if a step was missed) |
-| `width MS` | Coil pulse width, 5–100 ms (saved) |
-| `speed MS` | Catch-up step interval, 30–500 ms (saved) |
-| `help` | List commands |
-
-On first boot the hand position is unknown, so the clock **holds**. Run `set` with what the hands show, then `run`.
-
-## Bring-up checklist
-
-1. **No clock:** flash, watch the monitor for Wi-Fi, NTP and state messages. An LED + resistor on each GPIO shows the alternating pulses.
-2. **Motor on the spare KUPONG:** `hold`, then `pulse 10`. The second hand should move exactly 10 ticks. Tune `width` (shortest reliable) and `speed` (fastest reliable).
-3. **Sync:** `set` the real hand position, `run`, compare with a phone after 1 h and 24 h.
-4. **Edge cases:** reboot, unplug power, test DST by temporarily changing `TZ_INFO` in `src/main.cpp`.
 
 ## Ideas for later
 
-- **Battery operation:** the ULP coprocessor steps the motor in deep sleep and Wi-Fi syncs once a day. Expect months, not a year, on batteries.
-- **Automatic homing:** a Hall sensor + small magnet on the minute hand.
-- **Setup without code changes:** a captive portal (WiFiManager) instead of `secrets.h`, and a small web page instead of serial commands.
+- A third optocoupler on the buzzer: detect "alarm ringing" and notify (e.g. Home Assistant).
+- Set the KUPONG's alarm remotely through the same two buttons.
+- A captive portal (WiFiManager) instead of `secrets.h`.
+- DCF77 receiver instead of Wi-Fi, using the same button injection.
