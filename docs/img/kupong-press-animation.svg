@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 424" width="960" height="424" role="img" aria-labelledby="t d">
+<title id="t">Button press injection animation</title>
+<desc id="d">Animated: the ESP32 pulses GPIO4 three times; each pulse lights the optocoupler LED, closes its transistor across the + contacts, and the KUPONG hour digits step 06, 07, 08, 09.</desc>
+<style>
+svg{--bg:#f6f8fa;--surface:#ffffff;--ink:#1f2328;--muted:#59636e;--line:#57606a;
+--board:#dcebd6;--boardline:#6d9a62;--copper:#b8732e;--blue:#1f6f9f;--yellow:#9a7300;
+--glow:#DFB548;--lcd:#c9d1c1;--lcdink:#1c2418;--cob:#111;--metal:#b9c0c8;--brass:#c9a227}
+@media (prefers-color-scheme: dark){svg{--bg:#0d1117;--surface:#161b22;--ink:#e6edf3;
+--muted:#9198a1;--line:#8b949e;--board:#173022;--boardline:#3f7a4f;--copper:#d39a52;
+--blue:#7FC4E7;--yellow:#DFB548;--lcd:#2b3328;--lcdink:#dce8d2;--cob:#050505;--metal:#8d959e;--brass:#a8862a}}
+.bg{fill:var(--bg)}
+.surface{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+text{font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:var(--ink);font-size:14px}
+.title{font-size:20px;font-weight:700}
+.muted{fill:var(--muted)}
+.small{font-size:12px}
+.bold{font-weight:700}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.blue{fill:var(--blue)}
+.wire{stroke:var(--line);stroke-width:2;fill:none}
+.trace{stroke:var(--copper);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.copper{fill:var(--copper)}
+.board{fill:var(--board);stroke:var(--boardline);stroke-width:2}
+.tp circle{fill:var(--glow);stroke:var(--bg);stroke-width:2}
+.tp text{font-weight:700;font-size:14px;fill:#1f2328;text-anchor:middle}
+.opt{stroke:var(--yellow);stroke-width:2;stroke-dasharray:6 5;fill:none}
+.dot{fill:var(--line)}
+
+.led{animation:led 8s infinite}
+.ray{animation:led 8s infinite}
+.hot{animation:hot 8s infinite}
+.arm{transform-box:view-box;transform-origin:520px 128px;animation:arm 8s infinite}
+.closed-label{animation:led 8s infinite}
+.blink{animation:blink 1s steps(1) infinite}
+.d06{animation:d06 8s infinite}.d07{animation:d07 8s infinite}.d08{animation:d08 8s infinite}.d09{animation:d09 8s infinite}
+.playhead{animation:play 8s linear infinite}
+@keyframes led{0%,12.4%{opacity:.12}12.5%,16.2%{opacity:1}16.3%,31.2%{opacity:.12}31.25%,34.9%{opacity:1}35%,49.9%{opacity:.12}50%,53.7%{opacity:1}53.8%,100%{opacity:.12}}
+@keyframes hot{0%,12.4%{stroke:var(--line)}12.5%,16.2%{stroke:var(--glow)}16.3%,31.2%{stroke:var(--line)}31.25%,34.9%{stroke:var(--glow)}35%,49.9%{stroke:var(--line)}50%,53.7%{stroke:var(--glow)}53.8%,100%{stroke:var(--line)}}
+@keyframes arm{0%,12.4%{transform:rotate(-32deg)}12.5%,16.2%{transform:rotate(0)}16.3%,31.2%{transform:rotate(-32deg)}31.25%,34.9%{transform:rotate(0)}35%,49.9%{transform:rotate(-32deg)}50%,53.7%{transform:rotate(0)}53.8%,100%{transform:rotate(-32deg)}}
+@keyframes blink{0%{opacity:1}50%{opacity:.2}}
+@keyframes d06{0%,12.4%{opacity:1}12.5%,100%{opacity:0}}
+@keyframes d07{0%,12.4%{opacity:0}12.5%,31.2%{opacity:1}31.25%,100%{opacity:0}}
+@keyframes d08{0%,31.2%{opacity:0}31.25%,49.9%{opacity:1}50%,100%{opacity:0}}
+@keyframes d09{0%,49.9%{opacity:0}50%,100%{opacity:1}}
+@keyframes play{from{transform:translateX(0)}to{transform:translateX(840px)}}
+/* static frame (reduced motion): a press in progress, hours showing 07 */
+.d06,.d08,.d09{opacity:0}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}.playhead{display:none}}
+</style>
+<rect class="bg" width="960" height="424" rx="12"/>
+<text class="title" x="24" y="38">How one button press is injected</text>
+<text class="muted" x="24" y="60">Clock in set mode, hours flashing. Each GPIO4 pulse = one press of “+”.</text>
+<rect class="surface" x="40" y="88" width="170" height="110" rx="10"/>
+<text class="bold" x="58" y="116">ESP32-C3</text><text class="small mono muted" x="58" y="140">GPIO4 → +</text>
+<circle class="led" cx="190" cy="150" r="7" fill="var(--glow)"/>
+<polyline class="wire hot" points="210,150 250,150"/><polyline class="wire hot" points="250,150 258,143 266,157 274,143 282,157 290,143 298,157 306,150"/><text class="small muted" x="278" y="138" text-anchor="middle">1 kΩ</text><polyline class="wire hot" points="306,150 340,150"/>
+<rect class="surface" x="340" y="88" width="230" height="110" rx="10"/>
+<text class="small bold" x="455" y="80" text-anchor="middle">PC817 optocoupler</text>
+<polygon class="led" points="372,128 404,128 388,156" fill="var(--glow)" stroke="var(--line)"/>
+<line class="wire" x1="372" y1="156" x2="404" y2="156"/>
+<polyline class="wire hot" points="340,150 356,150 356,120 388,120 388,128"/><polyline class="wire" points="388,156 388,180 356,180"/><text class="small muted" x="350" y="184" text-anchor="end">GND</text>
+<g class="ray"><line x1="414" y1="134" x2="452" y2="134" stroke="var(--glow)" stroke-width="3"/><polygon points="452,129 462,134 452,139" fill="var(--glow)"/></g>
+<g class="ray"><line x1="414" y1="148" x2="452" y2="148" stroke="var(--glow)" stroke-width="3"/><polygon points="452,143 462,148 452,153" fill="var(--glow)"/></g>
+<circle class="dot" cx="520" cy="128" r="5"/><circle class="dot" cx="520" cy="172" r="5"/>
+<line class="arm" x1="520" y1="128" x2="520" y2="172" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/>
+<text class="small closed-label" x="535" y="154" style="fill:var(--yellow);font-weight:700">ON</text>
+<polyline class="wire hot" points="520,128 520,110 600,110 600,128 620,128"/>
+<polyline class="wire hot" points="520,172 520,186 600,186 600,172 620,172"/>
+<text class="small muted" x="560" y="210" text-anchor="middle">across the + contacts</text>
+<rect class="board" x="620" y="80" width="300" height="130" rx="12"/>
+<rect x="640" y="98" width="260" height="94" rx="6" fill="var(--lcd)" stroke="var(--line)"/>
+<g class="blink"><text class="mono d06" x="720" y="168" text-anchor="middle" style="font-size:64px;font-weight:700;fill:var(--lcdink)">06</text><text class="mono d07" x="720" y="168" text-anchor="middle" style="font-size:64px;font-weight:700;fill:var(--lcdink)">07</text><text class="mono d08" x="720" y="168" text-anchor="middle" style="font-size:64px;font-weight:700;fill:var(--lcdink)">08</text><text class="mono d09" x="720" y="168" text-anchor="middle" style="font-size:64px;font-weight:700;fill:var(--lcdink)">09</text></g>
+<text class="mono" style="font-size:64px;font-weight:700;fill:var(--lcdink)" x="770" y="166" text-anchor="middle">:</text><text class="mono" style="font-size:64px;font-weight:700;fill:var(--lcdink)" x="830" y="168" text-anchor="middle">30</text>
+<text class="small muted" x="770" y="230" text-anchor="middle">KUPONG LCD</text>
+<rect class="surface" x="40" y="262" width="880" height="120" rx="10"/>
+<text class="small mono muted" x="52" y="290">GPIO4</text>
+<text class="small bold" x="201" y="296" text-anchor="middle" style="fill:var(--yellow)">+</text>
+<text class="small bold" x="358" y="296" text-anchor="middle" style="fill:var(--yellow)">+</text>
+<text class="small bold" x="516" y="296" text-anchor="middle" style="fill:var(--yellow)">+</text>
+<polyline points="80,350 185,350 185,304 216,304 216,350 342,350 342,304 374,304 374,350 500,350 500,304 532,304 532,350 920,350" fill="none" stroke="var(--blue)" stroke-width="3"/>
+<text class="small muted" x="80" y="372" text-anchor="middle">0s</text>
+<text class="small muted" x="185" y="372" text-anchor="middle">1s</text>
+<text class="small muted" x="290" y="372" text-anchor="middle">2s</text>
+<text class="small muted" x="395" y="372" text-anchor="middle">3s</text>
+<text class="small muted" x="500" y="372" text-anchor="middle">4s</text>
+<text class="small muted" x="605" y="372" text-anchor="middle">5s</text>
+<text class="small muted" x="710" y="372" text-anchor="middle">6s</text>
+<text class="small muted" x="815" y="372" text-anchor="middle">7s</text>
+<text class="small muted" x="920" y="372" text-anchor="middle">8s</text>
+<text class="small muted" x="605.0" y="330">… then SET → minutes, same way</text>
+<line class="playhead" x1="80" y1="276" x2="80" y2="356" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 3"/>
+<text class="small muted" x="40" y="408">Pulse ≈ 300 ms (tune to what the clock registers). The opto’s LED lights, its transistor conducts, and the clock sees a pressed button.</text>
+</svg>
